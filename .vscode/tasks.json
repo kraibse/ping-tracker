@@ -1,0 +1,139 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Flutter pub get",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"pub",
+				"get"
+			],
+			"problemMatcher": [
+				"$flutter"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Flutter analyze",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"analyze",
+				"--no-preamble"
+			],
+			"problemMatcher": [
+				"$flutter"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Flutter analyze again",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"analyze",
+				"--no-preamble"
+			],
+			"problemMatcher": [
+				"$flutter"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Flutter analyze clean",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"analyze",
+				"--no-preamble"
+			],
+			"problemMatcher": [
+				"$flutter"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Flutter analyze final",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"analyze",
+				"--no-preamble"
+			],
+			"problemMatcher": [
+				"$flutter"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Flutter analyze really final",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"analyze",
+				"--no-preamble"
+			],
+			"problemMatcher": [
+				"$flutter"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Analyze after UI changes",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"analyze",
+				"--no-preamble"
+			],
+			"problemMatcher": [
+				"$flutter"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Analyze compile after helpers restored",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"analyze",
+				"--no-preamble"
+			],
+			"problemMatcher": [
+				"$flutter"
+			],
+			"group": "build"
+		},
+		{
+			"label": "flutter analyze (verify fonts change)",
+			"type": "shell",
+			"command": "flutter analyze --no-preamble",
+			"group": "build"
+		},
+		{
+			"label": "flutter analyze (apply history header + clear icon)",
+			"type": "shell",
+			"command": "flutter analyze --no-preamble",
+			"group": "build"
+		},
+		{
+			"label": "flutter analyze (finalize UI changes)",
+			"type": "shell",
+			"command": "flutter analyze --no-preamble",
+			"group": "build"
+		},
+		{
+			"label": "flutter analyze (clean)",
+			"type": "shell",
+			"command": "flutter analyze --no-preamble",
+			"group": "build"
+		},
+		{
+			"label": "flutter analyze (really final)",
+			"type": "shell",
+			"command": "flutter analyze --no-preamble",
+			"group": "build"
+		}
+	]
+}
