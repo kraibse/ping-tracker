@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/check_visual.dart';
+import '../theme/status_colors.dart';
 import 'status_dot.dart';
 
 class QuickHistoryList extends StatelessWidget {
@@ -26,6 +28,10 @@ class QuickHistoryList extends StatelessWidget {
         itemBuilder: (context, index) {
           final r = results[index];
           final isLoading = r.isLoading;
+          final colorScheme = Theme.of(context).colorScheme;
+          final statusColor = isLoading
+              ? colorScheme.loading
+              : (r.available ? colorScheme.success : colorScheme.statusError);
           return Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Card(
@@ -47,9 +53,8 @@ class QuickHistoryList extends StatelessWidget {
                           Row(
                             children: [
                               StatusDot(
-                                color: isLoading
-                                    ? Colors.grey
-                                    : (r.available ? Colors.green : Colors.red),
+                                color: statusColor,
+                                isActive: !isLoading && r.available,
                               ),
                               const SizedBox(width: 8),
                               Expanded(
@@ -92,12 +97,18 @@ class QuickHistoryList extends StatelessWidget {
                       children: [
                         IconButton(
                           tooltip: 'Save',
-                          onPressed: isLoading ? null : () => onSave(r.target),
+                          onPressed: isLoading ? null : () {
+                            HapticFeedback.lightImpact();
+                            onSave(r.target);
+                          },
                           icon: const Icon(Icons.save_outlined),
                         ),
                         IconButton(
                           tooltip: 'Retry',
-                          onPressed: isLoading ? null : () => onRetry(r.target),
+                          onPressed: isLoading ? null : () {
+                            HapticFeedback.lightImpact();
+                            onRetry(r.target);
+                          },
                           icon: const Icon(Icons.refresh),
                         ),
                       ],

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/log_controller.dart';
+import '../theme/status_colors.dart';
 
 String _monthName(int month) {
   const names = [
@@ -134,7 +135,7 @@ class _LogViewerState extends State<LogViewer> {
                               width: 8,
                               height: 8,
                               decoration: BoxDecoration(
-                                color: Colors.red,
+                                color: colorScheme.statusError,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                             ),
@@ -155,7 +156,7 @@ class _LogViewerState extends State<LogViewer> {
                                   Text(
                                     log.errorMessage!,
                                     style: theme.textTheme.bodySmall?.copyWith(
-                                      color: Colors.red,
+                                      color: colorScheme.statusError,
                                     ),
                                     maxLines: isExpanded ? null : 2,
                                     overflow: isExpanded ? null : TextOverflow.ellipsis,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,6 +11,7 @@ import 'models/track_entry.dart';
 import 'models/check_log.dart';
 import 'models/check_visual.dart';
 import 'controllers/log_controller.dart';
+import 'widgets/animated_list_item.dart';
 import 'widgets/entry_card.dart';
 import 'widgets/entry_dialog.dart';
 import 'widgets/group_filter_chips.dart';
@@ -107,6 +109,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _runQuickCheck() async {
     if (_quickCtrl.text.trim().isEmpty) return;
     final target = _quickCtrl.text.trim();
+    HapticFeedback.mediumImpact();
     setState(() {
       _quickLoading = true;
       _insertOrUpdateHistory(CheckVisual.loading(target));
@@ -175,12 +178,16 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             tooltip: 'Add entry',
             icon: const Icon(Icons.add),
-            onPressed: () => _showAddDialog(),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              _showAddDialog();
+            },
           ),
           IconButton(
             tooltip: 'Reload',
             icon: const Icon(Icons.refresh),
             onPressed: () async {
+              HapticFeedback.lightImpact();
               await entryController.runChecks();
             },
           ),
@@ -188,6 +195,7 @@ class _HomePageState extends State<HomePage> {
             tooltip: 'Settings',
             icon: const Icon(Icons.settings),
             onPressed: () async {
+              HapticFeedback.lightImpact();
               await Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const SettingsPage()),
               );
@@ -200,6 +208,7 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: FloatingActionButton(
         tooltip: 'Debug logs',
         onPressed: () {
+          HapticFeedback.lightImpact();
           showModalBottomSheet(
             context: context,
             isScrollControlled: true,
@@ -280,18 +289,21 @@ class _HomePageState extends State<HomePage> {
                       itemBuilder: (c, i) {
                         final e = entryController.entries[i];
                         final isEntryLoading = _inFlightEntryId == e.id;
-                        return EntryCard(
-                          entry: e,
-                          isLoading: isEntryLoading,
-                          onCheckNow: () async {
-                            setState(() => _inFlightEntryId = e.id);
-                            await entryController.runCheckFor(e);
-                            if (mounted) {
-                              setState(() => _inFlightEntryId = null);
-                            }
-                          },
-                          onEdit: () async => _showEditDialog(e),
-                          onDelete: () async => entryController.deleteEntry(e),
+                        return AnimatedListItem(
+                          index: i,
+                          child: EntryCard(
+                            entry: e,
+                            isLoading: isEntryLoading,
+                            onCheckNow: () async {
+                              setState(() => _inFlightEntryId = e.id);
+                              await entryController.runCheckFor(e);
+                              if (mounted) {
+                                setState(() => _inFlightEntryId = null);
+                              }
+                            },
+                            onEdit: () async => _showEditDialog(e),
+                            onDelete: () async => entryController.deleteEntry(e),
+                          ),
                         );
                       },
                     ),

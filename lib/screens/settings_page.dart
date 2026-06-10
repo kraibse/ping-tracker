@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -25,6 +26,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showGroupManager() {
+    HapticFeedback.lightImpact();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -52,7 +54,10 @@ class _SettingsPageState extends State<SettingsPage> {
         children: [
           SwitchListTile(
             value: _dark,
-            onChanged: (v) => setState(() => _dark = v),
+            onChanged: (v) {
+              HapticFeedback.lightImpact();
+              setState(() => _dark = v);
+            },
             title: const Text('Dark mode'),
             subtitle: const Text('Use the dark theme'),
           ),
@@ -81,6 +86,7 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 16),
           FilledButton(
             onPressed: () async {
+              HapticFeedback.mediumImpact();
               await context.read<SettingsController>().update(
                 intervalSeconds: _interval,
                 useDarkMode: _dark,

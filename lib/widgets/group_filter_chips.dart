@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class GroupFilterChips extends StatelessWidget {
@@ -27,7 +28,10 @@ class GroupFilterChips extends StatelessWidget {
               style: GoogleFonts.staatliches().copyWith(letterSpacing: 1.1),
             ),
             selected: selected == null,
-            onSelected: (_) => onSelected(null),
+            onSelected: (_) {
+              HapticFeedback.selectionClick();
+              onSelected(null);
+            },
           ),
           const SizedBox(width: 8),
           ...groups.map(
@@ -39,7 +43,10 @@ class GroupFilterChips extends StatelessWidget {
                   style: GoogleFonts.staatliches().copyWith(letterSpacing: 1.1),
                 ),
                 selected: selected == g,
-                onSelected: (_) => onSelected(g),
+                onSelected: (_) {
+                  HapticFeedback.selectionClick();
+                  onSelected(g);
+                },
               ),
             ),
           ),

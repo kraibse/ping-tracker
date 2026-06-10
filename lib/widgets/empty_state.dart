@@ -6,17 +6,30 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.wifi_tethering_off, size: 48, color: Colors.grey),
+          Icon(
+            Icons.wifi_tethering_off,
+            size: 48,
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          ),
           const SizedBox(height: 8),
-          const Text('No entries yet', style: TextStyle(fontSize: 18)),
+          Text(
+            'No entries yet',
+            style: TextStyle(
+              fontSize: 18,
+              color: colorScheme.onSurface,
+            ),
+          ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Add a URL or IP to start tracking',
-            style: TextStyle(color: Colors.grey),
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 12),
           FilledButton.icon(

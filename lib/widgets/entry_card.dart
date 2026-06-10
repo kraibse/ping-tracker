@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/track_entry.dart';
+import '../theme/status_colors.dart';
 import 'status_dot.dart';
 
 class EntryCard extends StatelessWidget {
@@ -22,9 +24,11 @@ class EntryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final statusColor = isLoading
-        ? Colors.grey
-        : ((entry.isAvailable ?? false) ? Colors.green : Colors.red);
+        ? colorScheme.loading
+        : ((entry.isAvailable ?? false) ? colorScheme.success : colorScheme.statusError);
+    final isActive = (entry.isAvailable ?? false) && !isLoading;
 
     return Card(
       elevation: 0,
@@ -42,7 +46,7 @@ class EntryCard extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      StatusDot(color: statusColor),
+                      StatusDot(color: statusColor, isActive: isActive),
                       const SizedBox(width: 8),
                       Text(
                         entry.alias?.isNotEmpty == true
@@ -96,6 +100,7 @@ class EntryCard extends StatelessWidget {
                   )
                 : PopupMenuButton<String>(
                     onSelected: (v) {
+                      HapticFeedback.lightImpact();
                       switch (v) {
                         case 'run':
                           onCheckNow();

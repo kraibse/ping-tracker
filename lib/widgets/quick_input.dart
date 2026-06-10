@@ -22,7 +22,7 @@ class QuickInput extends StatelessWidget {
             prefixIcon: const Icon(Icons.search),
             hintText: 'Quick check URL, host, or host:port…',
             filled: true,
-            fillColor: const Color.fromARGB(255, 10, 10, 10),
+            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -33,7 +33,10 @@ class QuickInput extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 1.5,
+              ),
             ),
             suffixIcon: loading
                 ? const Padding(
