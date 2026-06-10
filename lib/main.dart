@@ -7,13 +7,16 @@ import 'controllers/entry_controller.dart';
 import 'controllers/settings_controller.dart';
 import 'models/app_settings.dart';
 import 'models/track_entry.dart';
+import 'models/check_log.dart';
 import 'models/check_visual.dart';
+import 'controllers/log_controller.dart';
 import 'widgets/entry_card.dart';
 import 'widgets/entry_dialog.dart';
 import 'widgets/group_filter_chips.dart';
 import 'widgets/quick_history_list.dart';
 import 'widgets/quick_input.dart';
 import 'screens/settings_page.dart';
+import 'widgets/log_viewer.dart';
 import 'widgets/empty_state.dart';
 
 Future<void> main() async {
@@ -21,16 +24,23 @@ Future<void> main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(TrackEntryAdapter());
   Hive.registerAdapter(AppSettingsAdapter());
+  Hive.registerAdapter(CheckLogAdapter());
 
   final settingsController = SettingsController();
   await settingsController.init();
-  final entryController = EntryController(settings: settingsController);
+  final logController = LogController();
+  await logController.init();
+  final entryController = EntryController(
+    settings: settingsController,
+    logs: logController,
+  );
   await entryController.init();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: settingsController),
+        ChangeNotifierProvider.value(value: logController),
         ChangeNotifierProvider.value(value: entryController),
       ],
       child: const MyApp(),
@@ -186,6 +196,20 @@ class _HomePageState extends State<HomePage> {
             },
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Debug logs',
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            builder: (_) => const LogViewer(),
+          );
+        },
+        child: const Icon(Icons.bug_report_outlined),
       ),
       body: Column(
         children: [

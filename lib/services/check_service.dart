@@ -7,11 +7,15 @@ class CheckResult {
   final int? statusCode;
   final bool isAvailable;
   final int pingMs;
+  final String? error;
+  final String method;
 
   CheckResult({
     this.statusCode,
     required this.isAvailable,
     required this.pingMs,
+    this.error,
+    this.method = 'unknown',
   });
 }
 
@@ -73,30 +77,56 @@ class CheckService {
             isAvailable:
                 headResp.statusCode >= 200 && headResp.statusCode < 500,
             pingMs: sw.elapsedMilliseconds,
+            method: 'HTTP HEAD',
           );
-        } on Exception {
+        } on Exception catch (e) {
           // fallback to GET
-          final getResp = await http.get(url).timeout(timeout);
-          sw.stop();
-          return CheckResult(
-            statusCode: getResp.statusCode,
-            isAvailable: getResp.statusCode >= 200 && getResp.statusCode < 500,
-            pingMs: sw.elapsedMilliseconds,
-          );
+          try {
+            final getResp = await http.get(url).timeout(timeout);
+            sw.stop();
+            return CheckResult(
+              statusCode: getResp.statusCode,
+              isAvailable: getResp.statusCode >= 200 && getResp.statusCode < 500,
+              pingMs: sw.elapsedMilliseconds,
+              method: 'HTTP GET',
+              error: e.toString(),
+            );
+          } on Exception catch (e2) {
+            sw.stop();
+            return CheckResult(
+              statusCode: null,
+              isAvailable: false,
+              pingMs: sw.elapsedMilliseconds,
+              method: 'HTTP GET',
+              error: e2.toString(),
+            );
+          }
         }
       }
 
       // 2) host:port (TCP) e.g., example.com:443, 1.2.3.4:22, [::1]:8080
       final hp = _parseHostPort(target);
       if (hp != null) {
-        final socket = await Socket.connect(hp.$1, hp.$2, timeout: timeout);
-        await socket.close();
-        sw.stop();
-        return CheckResult(
-          statusCode: null,
-          isAvailable: true,
-          pingMs: sw.elapsedMilliseconds,
-        );
+        try {
+          final socket = await Socket.connect(hp.$1, hp.$2, timeout: timeout);
+          await socket.close();
+          sw.stop();
+          return CheckResult(
+            statusCode: null,
+            isAvailable: true,
+            pingMs: sw.elapsedMilliseconds,
+            method: 'TCP ${hp.$1}:${hp.$2}',
+          );
+        } on Exception catch (e) {
+          sw.stop();
+          return CheckResult(
+            statusCode: null,
+            isAvailable: false,
+            pingMs: sw.elapsedMilliseconds,
+            method: 'TCP ${hp.$1}:${hp.$2}',
+            error: e.toString(),
+          );
+        }
       }
 
       // 3) Plain host/IP -> HTTP check to default port using normalized URL
@@ -108,23 +138,39 @@ class CheckService {
           statusCode: headResp.statusCode,
           isAvailable: headResp.statusCode >= 200 && headResp.statusCode < 500,
           pingMs: sw.elapsedMilliseconds,
+          method: 'HTTP HEAD',
         );
-      } on Exception {
+      } on Exception catch (e) {
         // fallback to GET
-        final getResp = await http.get(url).timeout(timeout);
-        sw.stop();
-        return CheckResult(
-          statusCode: getResp.statusCode,
-          isAvailable: getResp.statusCode >= 200 && getResp.statusCode < 500,
-          pingMs: sw.elapsedMilliseconds,
-        );
+        try {
+          final getResp = await http.get(url).timeout(timeout);
+          sw.stop();
+          return CheckResult(
+            statusCode: getResp.statusCode,
+            isAvailable: getResp.statusCode >= 200 && getResp.statusCode < 500,
+            pingMs: sw.elapsedMilliseconds,
+            method: 'HTTP GET',
+            error: e.toString(),
+          );
+        } on Exception catch (e2) {
+          sw.stop();
+          return CheckResult(
+            statusCode: null,
+            isAvailable: false,
+            pingMs: sw.elapsedMilliseconds,
+            method: 'HTTP GET',
+            error: e2.toString(),
+          );
+        }
       }
-    } catch (_) {
+    } catch (e) {
       sw.stop();
       return CheckResult(
         statusCode: null,
         isAvailable: false,
         pingMs: sw.elapsedMilliseconds,
+        method: 'unknown',
+        error: e.toString(),
       );
     }
   }

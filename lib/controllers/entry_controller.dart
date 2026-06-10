@@ -6,13 +6,15 @@ import 'package:uuid/uuid.dart';
 
 import '../models/track_entry.dart';
 import '../services/check_service.dart';
+import 'log_controller.dart';
 import 'settings_controller.dart';
 
 class EntryController extends ChangeNotifier {
   static const String boxName = 'track_entries';
 
   final SettingsController settings;
-  EntryController({required this.settings});
+  final LogController logs;
+  EntryController({required this.settings, required this.logs});
 
   Timer? _timer;
 
@@ -65,6 +67,14 @@ class EntryController extends ChangeNotifier {
         ..lastPingMs = res.pingMs
         ..lastCheckedAt = DateTime.now();
       await entry.save();
+      await logs.addLog(
+        target: entry.target,
+        method: res.method,
+        statusCode: res.statusCode,
+        isAvailable: res.isAvailable,
+        pingMs: res.pingMs,
+        error: res.error,
+      );
     }
     notifyListeners();
   }
@@ -77,6 +87,14 @@ class EntryController extends ChangeNotifier {
       ..lastPingMs = res.pingMs
       ..lastCheckedAt = DateTime.now();
     await entry.save();
+    await logs.addLog(
+      target: entry.target,
+      method: res.method,
+      statusCode: res.statusCode,
+      isAvailable: res.isAvailable,
+      pingMs: res.pingMs,
+      error: res.error,
+    );
     notifyListeners();
   }
 
@@ -119,7 +137,18 @@ class EntryController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<CheckResult> quickCheck(String target) => CheckService.check(target);
+  Future<CheckResult> quickCheck(String target) async {
+    final res = await CheckService.check(target);
+    await logs.addLog(
+      target: target,
+      method: res.method,
+      statusCode: res.statusCode,
+      isAvailable: res.isAvailable,
+      pingMs: res.pingMs,
+      error: res.error,
+    );
+    return res;
+  }
 
   @override
   void dispose() {

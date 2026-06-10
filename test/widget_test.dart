@@ -11,15 +11,18 @@ import 'package:provider/provider.dart';
 import 'package:ping_tracker/main.dart';
 import 'package:ping_tracker/controllers/settings_controller.dart';
 import 'package:ping_tracker/controllers/entry_controller.dart';
+import 'package:ping_tracker/controllers/log_controller.dart';
 
 void main() {
   testWidgets('App builds and shows title', (WidgetTester tester) async {
     final settings = SettingsController();
-    final entry = EntryController(settings: settings);
+    final logs = LogController();
+    final entry = EntryController(settings: settings, logs: logs);
     await tester.pumpWidget(
       MultiProvider(
         providers: [
           ChangeNotifierProvider.value(value: settings),
+          ChangeNotifierProvider.value(value: logs),
           ChangeNotifierProvider.value(value: entry),
         ],
         child: const MyApp(),
