@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -12,8 +13,36 @@ String _monthName(int month) {
   return names[month - 1];
 }
 
-class LogViewer extends StatelessWidget {
+class LogViewer extends StatefulWidget {
   const LogViewer({super.key});
+
+  @override
+  State<LogViewer> createState() => _LogViewerState();
+}
+
+class _LogViewerState extends State<LogViewer> {
+  final Set<int> _expanded = {};
+
+  void _toggleExpanded(int index) {
+    setState(() {
+      if (_expanded.contains(index)) {
+        _expanded.remove(index);
+      } else {
+        _expanded.add(index);
+      }
+    });
+  }
+
+  void _copyError(String? error) {
+    if (error == null || error.isEmpty) return;
+    Clipboard.setData(ClipboardData(text: error));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Error copied to clipboard'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,51 +116,61 @@ class LogViewer extends StatelessWidget {
                   itemCount: logs.length,
                   itemBuilder: (c, i) {
                     final log = logs[i];
+                    final isExpanded = _expanded.contains(i);
                     final timeStr =
                         '${log.timestamp.hour.toString().padLeft(2, '0')}:${log.timestamp.minute.toString().padLeft(2, '0')}:${log.timestamp.second.toString().padLeft(2, '0')}';
                     final dateStr =
                         '${_monthName(log.timestamp.month)} ${log.timestamp.day}';
 
-                    return ListTile(
-                      dense: true,
-                      leading: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      title: Text(
-                        log.target,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      subtitle: Column(
+                    return InkWell(
+                      onTap: () => _toggleExpanded(i),
+                      onLongPress: () => _copyError(log.errorMessage),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '${log.method}  •  ${log.statusCode?.toString() ?? '—'}  •  ${log.pingMs}ms',
-                            style: theme.textTheme.bodySmall,
-                          ),
-                          if (log.errorMessage != null && log.errorMessage!.isNotEmpty)
-                            Text(
-                              log.errorMessage!,
-                              style: theme.textTheme.bodySmall?.copyWith(
+                          ListTile(
+                            dense: true,
+                            leading: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
                                 color: Colors.red,
+                                borderRadius: BorderRadius.circular(4),
                               ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
                             ),
+                            title: Text(
+                              log.target,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${log.method}  •  ${log.statusCode?.toString() ?? '—'}  •  ${log.pingMs}ms',
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                                if (log.errorMessage != null)
+                                  Text(
+                                    log.errorMessage!,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: Colors.red,
+                                    ),
+                                    maxLines: isExpanded ? null : 2,
+                                    overflow: isExpanded ? null : TextOverflow.ellipsis,
+                                  ),
+                              ],
+                            ),
+                            trailing: Text(
+                              '$dateStr\n$timeStr',
+                              textAlign: TextAlign.right,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
                         ],
-                      ),
-                      trailing: Text(
-                        '$dateStr\n$timeStr',
-                        textAlign: TextAlign.right,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
                       ),
                     );
                   },
