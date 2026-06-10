@@ -96,6 +96,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final _quickCtrl = TextEditingController();
   bool _quickLoading = false;
+  bool _historyExpanded = true;
   final List<CheckVisual> _quickResults = <CheckVisual>[];
   final Set<String> _inFlightTargets = <String>{};
   String? _inFlightEntryId;
@@ -240,11 +241,31 @@ class _HomePageState extends State<HomePage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'History (${_quickResults.length})',
-                          style: GoogleFonts.staatliches().copyWith(
-                            letterSpacing: 1.1,
-                          ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GestureDetector(
+                              onTap: () => setState(
+                                () => _historyExpanded = !_historyExpanded,
+                              ),
+                              child: AnimatedRotation(
+                                turns: _historyExpanded ? 0.5 : 0,
+                                duration: const Duration(milliseconds: 200),
+                                child: Icon(
+                                  Icons.expand_less,
+                                  size: 16,
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'History (${_quickResults.length})',
+                              style: GoogleFonts.staatliches().copyWith(
+                                letterSpacing: 1.1,
+                              ),
+                            ),
+                          ],
                         ),
                         TextButton(
                           onPressed: () =>
@@ -254,19 +275,24 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                   ),
-                if (_quickResults.isNotEmpty)
-                  QuickHistoryList(
-                    results: _quickResults,
-                    onRetry: _retryQuickCheck,
-                    onSave: (target) async {
-                      await _showAddDialog(prefillTarget: target);
-                      setState(() {
-                        _quickResults.removeWhere(
-                          (r) => r.target.toLowerCase() == target.toLowerCase(),
-                        );
-                      });
-                    },
-                  ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  child: _historyExpanded && _quickResults.isNotEmpty
+                      ? QuickHistoryList(
+                          results: _quickResults,
+                          onRetry: _retryQuickCheck,
+                          onSave: (target) async {
+                            await _showAddDialog(prefillTarget: target);
+                            setState(() {
+                              _quickResults.removeWhere(
+                                (r) => r.target.toLowerCase() == target.toLowerCase(),
+                              );
+                            });
+                          },
+                        )
+                      : const SizedBox.shrink(),
+                ),
               ],
             ),
           ),
