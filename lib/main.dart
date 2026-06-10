@@ -9,9 +9,11 @@ import 'models/app_settings.dart';
 import 'models/track_entry.dart';
 import 'models/check_visual.dart';
 import 'widgets/entry_card.dart';
+import 'widgets/entry_dialog.dart';
 import 'widgets/group_filter_chips.dart';
 import 'widgets/quick_history_list.dart';
 import 'widgets/quick_input.dart';
+import 'screens/settings_page.dart';
 import 'widgets/empty_state.dart';
 
 Future<void> main() async {
@@ -163,7 +165,7 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             tooltip: 'Add entry',
             icon: const Icon(Icons.add),
-            onPressed: () => _showAddDialog(context),
+            onPressed: () => _showAddDialog(),
           ),
           IconButton(
             tooltip: 'Reload',
@@ -172,17 +174,17 @@ class _HomePageState extends State<HomePage> {
               await entryController.runChecks();
             },
           ),
-          // Uncomment to expose settings UI
-          // IconButton(
-          //   icon: const Icon(Icons.settings),
-          //   onPressed: () async {
-          //     await Navigator.of(context).push(
-          //       MaterialPageRoute(builder: (_) => const SettingsPage()),
-          //     );
-          //     if (!mounted) return;
-          //     entryController.refreshTimer();
-          //   },
-          // ),
+          IconButton(
+            tooltip: 'Settings',
+            icon: const Icon(Icons.settings),
+            onPressed: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SettingsPage()),
+              );
+              if (!mounted) return;
+              entryController.refreshTimer();
+            },
+          ),
         ],
       ),
       body: Column(
@@ -224,7 +226,7 @@ class _HomePageState extends State<HomePage> {
                     results: _quickResults,
                     onRetry: _retryQuickCheck,
                     onSave: (target) async {
-                      await _showAddDialog(context, prefillTarget: target);
+                      await _showAddDialog(prefillTarget: target);
                     },
                   ),
               ],
@@ -241,7 +243,7 @@ class _HomePageState extends State<HomePage> {
           ),
           Expanded(
             child: entryController.entries.isEmpty
-                ? EmptyState(onAdd: () => _showAddDialog(context))
+                ?                 EmptyState(onAdd: () => _showAddDialog())
                 : RefreshIndicator(
                     onRefresh: () => entryController.runChecks(),
                     child: ListView.builder(
@@ -259,7 +261,7 @@ class _HomePageState extends State<HomePage> {
                               setState(() => _inFlightEntryId = null);
                             }
                           },
-                          onEdit: () async => _showEditDialog(context, e),
+                          onEdit: () async => _showEditDialog(e),
                           onDelete: () async => entryController.deleteEntry(e),
                         );
                       },
@@ -271,110 +273,55 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> _showAddDialog(
-    BuildContext context, {
-    String? prefillTarget,
-  }) async {
-    final targetCtrl = TextEditingController(text: prefillTarget ?? '');
-    final aliasCtrl = TextEditingController();
-    final groupCtrl = TextEditingController();
+  Future<void> _showAddDialog({String? prefillTarget}) async {
     final entryController = context.read<EntryController>();
-    await showDialog(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: const Text('Add entry'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: targetCtrl,
-              decoration: const InputDecoration(labelText: 'URL or IP / host'),
-            ),
-            TextField(
-              controller: aliasCtrl,
-              decoration: const InputDecoration(labelText: 'Alias (optional)'),
-            ),
-            TextField(
-              controller: groupCtrl,
-              decoration: const InputDecoration(labelText: 'Group (optional)'),
-            ),
-          ],
+    final settingsController = context.read<SettingsController>();
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => EntryDialog(
+          prefillTarget: prefillTarget,
+          onSave: ({required target, alias, group}) async {
+            if (group != null && group.isNotEmpty) {
+              await settingsController.addGroup(group);
+            }
+            final newEntry = await entryController.addEntry(
+              target: target,
+              alias: alias,
+              group: group,
+            );
+            if (!mounted) return;
+            setState(() => _inFlightEntryId = newEntry.id);
+            Navigator.of(context).pop();
+            await entryController.runCheckFor(newEntry);
+            if (!mounted) return;
+            setState(() => _inFlightEntryId = null);
+          },
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              if (targetCtrl.text.trim().isEmpty) return;
-              final newEntry = await entryController.addEntry(
-                target: targetCtrl.text.trim(),
-                alias: aliasCtrl.text.trim().isEmpty
-                    ? null
-                    : aliasCtrl.text.trim(),
-                group: groupCtrl.text.trim().isEmpty
-                    ? null
-                    : groupCtrl.text.trim(),
-              );
-              // Show loading on this card and immediately run a check
-              setState(() => _inFlightEntryId = newEntry.id);
-              // Close dialog before running check to avoid UI lag
-              if (c.mounted) Navigator.pop(c);
-              await entryController.runCheckFor(newEntry);
-              if (mounted) setState(() => _inFlightEntryId = null);
-            },
-            child: const Text('Save & Check'),
-          ),
-        ],
       ),
     );
   }
 
-  Future<void> _showEditDialog(BuildContext context, TrackEntry entry) async {
-    final targetCtrl = TextEditingController(text: entry.target);
-    final aliasCtrl = TextEditingController(text: entry.alias ?? '');
-    final groupCtrl = TextEditingController(text: entry.group ?? '');
+  Future<void> _showEditDialog(TrackEntry entry) async {
     final entryController = context.read<EntryController>();
-    await showDialog(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: const Text('Edit entry'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: targetCtrl,
-              decoration: const InputDecoration(labelText: 'URL or IP / host'),
-            ),
-            TextField(
-              controller: aliasCtrl,
-              decoration: const InputDecoration(labelText: 'Alias'),
-            ),
-            TextField(
-              controller: groupCtrl,
-              decoration: const InputDecoration(labelText: 'Group'),
-            ),
-          ],
+    final settingsController = context.read<SettingsController>();
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => EntryDialog(
+          entry: entry,
+          onSave: ({required target, alias, group}) async {
+            if (group != null && group.isNotEmpty && group != entry.group) {
+              await settingsController.addGroup(group);
+            }
+            await entryController.updateEntry(
+              entry,
+              target: target,
+              alias: alias,
+              group: group,
+            );
+            if (!mounted) return;
+            Navigator.of(context).pop();
+          },
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              await entryController.updateEntry(
-                entry,
-                target: targetCtrl.text.trim(),
-                alias: aliasCtrl.text.trim(),
-                group: groupCtrl.text.trim(),
-              );
-              if (c.mounted) Navigator.pop(c);
-            },
-            child: const Text('Save'),
-          ),
-        ],
       ),
     );
   }

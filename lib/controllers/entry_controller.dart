@@ -24,6 +24,9 @@ class EntryController extends ChangeNotifier {
     for (final e in _entries) {
       if ((e.group ?? '').isNotEmpty) set.add(e.group!);
     }
+    for (final g in settings.value.groups) {
+      set.add(g);
+    }
     return set.toList()
       ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
   }

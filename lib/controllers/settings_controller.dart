@@ -23,6 +23,7 @@ class SettingsController extends ChangeNotifier {
     int? intervalSeconds,
     bool? useDarkMode,
     String? activeGroup,
+    List<String>? groups,
   }) async {
     final box = Hive.box<AppSettings>(boxName);
     if (intervalSeconds != null) {
@@ -34,6 +35,39 @@ class SettingsController extends ChangeNotifier {
     if (activeGroup != null) {
       _settings.activeGroupFilter = activeGroup.isEmpty ? null : activeGroup;
     }
+    if (groups != null) {
+      _settings.groups = groups;
+    }
+    await box.put('settings', _settings);
+    notifyListeners();
+  }
+
+  Future<void> addGroup(String name) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return;
+    if (_settings.groups.contains(trimmed)) return;
+    _settings.groups.add(trimmed);
+    _settings.groups.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    final box = Hive.box<AppSettings>(boxName);
+    await box.put('settings', _settings);
+    notifyListeners();
+  }
+
+  Future<void> renameGroup(String oldName, String newName) async {
+    final trimmed = newName.trim();
+    if (trimmed.isEmpty || trimmed == oldName) return;
+    final index = _settings.groups.indexOf(oldName);
+    if (index == -1) return;
+    _settings.groups[index] = trimmed;
+    _settings.groups.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    final box = Hive.box<AppSettings>(boxName);
+    await box.put('settings', _settings);
+    notifyListeners();
+  }
+
+  Future<void> deleteGroup(String name) async {
+    _settings.groups.remove(name);
+    final box = Hive.box<AppSettings>(boxName);
     await box.put('settings', _settings);
     notifyListeners();
   }
