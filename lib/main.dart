@@ -251,6 +251,11 @@ class _HomePageState extends State<HomePage> {
                     onRetry: _retryQuickCheck,
                     onSave: (target) async {
                       await _showAddDialog(prefillTarget: target);
+                      setState(() {
+                        _quickResults.removeWhere(
+                          (r) => r.target.toLowerCase() == target.toLowerCase(),
+                        );
+                      });
                     },
                   ),
               ],
